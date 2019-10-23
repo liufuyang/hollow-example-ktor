@@ -2,7 +2,6 @@ package com.example
 
 import com.example.hollow.generated.InfoEntity
 import com.example.hollow.generated.InfoEntityAPI
-import com.example.hollow.generated.Status
 import com.netflix.hollow.api.consumer.HollowConsumer
 import com.netflix.hollow.api.consumer.fs.HollowFilesystemAnnouncementWatcher
 import com.netflix.hollow.api.consumer.fs.HollowFilesystemBlobRetriever
@@ -16,7 +15,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.routing
-import jdk.jshell.Snippet
 import java.io.File
 import java.util.stream.Collectors
 

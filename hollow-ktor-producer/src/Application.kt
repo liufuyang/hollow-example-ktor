@@ -1,5 +1,7 @@
 package com.example
 
+import com.netflix.hollow.api.consumer.fs.HollowFilesystemAnnouncementWatcher
+import com.netflix.hollow.api.consumer.fs.HollowFilesystemBlobRetriever
 import com.netflix.hollow.api.producer.HollowProducer
 import com.netflix.hollow.api.producer.fs.HollowFilesystemAnnouncer
 import com.netflix.hollow.api.producer.fs.HollowFilesystemPublisher
@@ -40,16 +42,23 @@ fun Application.module(testing: Boolean = false) {
 
     val publisher = HollowFilesystemPublisher(localPublishDir.toPath())
     val announcer = HollowFilesystemAnnouncer(localPublishDir.toPath())
+    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())
+    val announcementWatcher = HollowFilesystemAnnouncementWatcher(localPublishDir.toPath())
 
     val producer = HollowProducer
         .withPublisher(publisher)
         .withAnnouncer(announcer)
         .buildIncremental()
 
+    producer.initializeDataModel(InfoEntity::class.java)
+    val latestAnnouncedVersion = announcementWatcher.getLatestVersion()
+    producer.restore(latestAnnouncedVersion, blobRetriever)
+
     producer.runIncrementalCycle { state ->
         for (e in entityList)
             state.addIfAbsent(e)
     }
+
     /** End of Hollow setup **/
 
     routing {
