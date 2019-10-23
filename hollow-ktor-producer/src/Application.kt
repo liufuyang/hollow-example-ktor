@@ -1,6 +1,8 @@
 package com.example
 
 import com.netflix.hollow.api.producer.HollowProducer
+import com.netflix.hollow.api.producer.fs.HollowFilesystemBlobStager
+import com.netflix.hollow.core.write.HollowBlobWriter
 import gcs.customer.GcsBolbRetriever
 import gcs.customer.GcsIndex
 import gcs.customer.GcsWatcher
@@ -20,6 +22,8 @@ import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
+import java.io.BufferedOutputStream
+import java.nio.file.Files
 
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -92,6 +96,35 @@ fun Application.module(testing: Boolean = false) {
             producer.runIncrementalCycle { state ->
                 state.addOrModify(newInfo)
             }
+
+            call.respond(HttpStatusCode.Created)
+        }
+
+        post("/snapshot") {
+
+            val temporaryProducer = HollowProducer
+                .withPublisher(publisher)
+                .withAnnouncer(announcer)
+                .build()
+            val writeEngine = temporaryProducer.getWriteEngine()
+            writeEngine.prepareForNextCycle()
+
+            val blobWriter = HollowBlobWriter(writeEngine)
+            val entities = db.values
+            val stager = HollowFilesystemBlobStager()
+            val versionOfSnapshot = announcer.announcedVersion + 1L
+
+            val blob = stager.openSnapshot(versionOfSnapshot)
+
+            entities.forEach { temporaryProducer.getObjectMapper().add(it) }
+
+
+            val output = BufferedOutputStream(Files.newOutputStream(blob.path))
+            blobWriter.writeSnapshot(output)
+            publisher.publish(blob)
+            announcer.announce(versionOfSnapshot)
+
+            producer.restore(versionOfSnapshot, blobRetriever)
 
             call.respond(HttpStatusCode.Created)
         }
