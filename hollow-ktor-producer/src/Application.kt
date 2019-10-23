@@ -1,10 +1,12 @@
 package com.example
 
-import com.netflix.hollow.api.consumer.fs.HollowFilesystemAnnouncementWatcher
-import com.netflix.hollow.api.consumer.fs.HollowFilesystemBlobRetriever
 import com.netflix.hollow.api.producer.HollowProducer
-import com.netflix.hollow.api.producer.fs.HollowFilesystemAnnouncer
-import com.netflix.hollow.api.producer.fs.HollowFilesystemPublisher
+import gcs.customer.GcsBolbRetriever
+import gcs.customer.GcsIndex
+import gcs.customer.GcsWatcher
+import gcs.producer.GcsAnnouncer
+import gcs.producer.GcsIndexer
+import gcs.producer.GcsPublisher
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -18,7 +20,6 @@ import io.ktor.response.respondText
 import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.routing
-import java.io.File
 
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
@@ -38,21 +39,25 @@ fun Application.module(testing: Boolean = false) {
     ).toMutableMap()
 
     /** Hollow setup **/
-    val localPublishDir = File("target/publish")
+//    val localPublishDir = File("target/publish")
 
-    val publisher = HollowFilesystemPublisher(localPublishDir.toPath())
-    val announcer = HollowFilesystemAnnouncer(localPublishDir.toPath())
-    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())
-    val announcementWatcher = HollowFilesystemAnnouncementWatcher(localPublishDir.toPath())
+    val publisher = GcsPublisher(this.environment.config, GcsIndexer(this.environment.config))
+    val announcer = GcsAnnouncer(this.environment.config)
 
     val producer = HollowProducer
         .withPublisher(publisher)
         .withAnnouncer(announcer)
         .buildIncremental()
 
+//    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())
+//    val announcementWatcher = HollowFilesystemAnnouncementWatcher(localPublishDir.toPath())
+
+    val gcsIndex = GcsIndex(this.environment.config)
+    val blobRetriever = GcsBolbRetriever(this.environment.config, gcsIndex)
+    val announcementWatcher = GcsWatcher(this.environment.config)
+
     producer.initializeDataModel(InfoEntity::class.java)
-    val latestAnnouncedVersion = announcementWatcher.getLatestVersion()
-    producer.restore(latestAnnouncedVersion, blobRetriever)
+    producer.restore(announcementWatcher.getLatestVersion(), blobRetriever)
 
     producer.runIncrementalCycle { state ->
         for (e in db.values)
@@ -68,6 +73,10 @@ fun Application.module(testing: Boolean = false) {
 
         get("/json/gson") {
             call.respond(mapOf("hello" to "world"))
+        }
+
+        get("/version") {
+            call.respond(announcer.announcedVersion)
         }
 
         get("/info") {
@@ -87,5 +96,10 @@ fun Application.module(testing: Boolean = false) {
             call.respond(HttpStatusCode.Created)
         }
     }
+
+    val bucket: String = this.environment.config
+        .propertyOrNull("carbon.gcs.bucket")?.getString()
+        ?: "80"
+    println(bucket)
 }
 

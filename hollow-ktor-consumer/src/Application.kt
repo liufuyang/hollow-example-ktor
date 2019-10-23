@@ -3,9 +3,10 @@ package com.example
 import com.example.hollow.generated.InfoEntity
 import com.example.hollow.generated.InfoEntityAPI
 import com.netflix.hollow.api.consumer.HollowConsumer
-import com.netflix.hollow.api.consumer.fs.HollowFilesystemAnnouncementWatcher
-import com.netflix.hollow.api.consumer.fs.HollowFilesystemBlobRetriever
 import com.netflix.hollow.api.consumer.index.HashIndex
+import gcs.customer.GcsBolbRetriever
+import gcs.customer.GcsIndex
+import gcs.customer.GcsWatcher
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -15,7 +16,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.routing
-import java.io.File
 import java.util.stream.Collectors
 
 
@@ -31,10 +31,9 @@ fun Application.module(testing: Boolean = false) {
     }
 
     /** Hollow setup **/
-    val localPublishDir = File("../hollow-ktor-producer/target/publish")
-
-    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())
-    val announcementWatcher = HollowFilesystemAnnouncementWatcher(localPublishDir.toPath())
+    val gcsIndex = GcsIndex(this.environment.config)
+    val blobRetriever = GcsBolbRetriever(this.environment.config, gcsIndex)
+    val announcementWatcher = GcsWatcher(this.environment.config)
 
     val consumer = HollowConsumer.withBlobRetriever(blobRetriever)
         .withAnnouncementWatcher(announcementWatcher)
