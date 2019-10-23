@@ -31,11 +31,11 @@ fun Application.module(testing: Boolean = false) {
         }
     }
 
-    val entityList = listOf(
-        InfoEntity(1, "News 1", Status.NEW, 0),
-        InfoEntity(2, "News 2", Status.NEW, 1),
-        InfoEntity(3, "News 3", Status.NEW, 2)
-    ).toMutableList()
+    val db = mapOf(
+        1 to InfoEntity(1, "News 1", Status.NEW, 0),
+        2 to InfoEntity(2, "News 2", Status.NEW, 1),
+        3 to InfoEntity(3, "News 3", Status.NEW, 2)
+    ).toMutableMap()
 
     /** Hollow setup **/
     val localPublishDir = File("target/publish")
@@ -55,7 +55,7 @@ fun Application.module(testing: Boolean = false) {
     producer.restore(latestAnnouncedVersion, blobRetriever)
 
     producer.runIncrementalCycle { state ->
-        for (e in entityList)
+        for (e in db.values)
             state.addIfAbsent(e)
     }
 
@@ -71,21 +71,14 @@ fun Application.module(testing: Boolean = false) {
         }
 
         get("/info") {
-            call.respond(entityList)
+            call.respond(db.values)
         }
 
         post("/info") {
             val newInfo = call.receive<InfoEntity>()
             println(newInfo)
 
-            val sameId = entityList.filter { it.id == newInfo.id }
-            if (sameId.isEmpty()) {
-                entityList.add(newInfo)
-            } else {
-                val ind = entityList.indexOfFirst { it.id == newInfo.id }
-                entityList.removeAt(ind)
-                entityList.add(newInfo)
-            }
+            db[newInfo.id] = newInfo
 
             producer.runIncrementalCycle { state ->
                 state.addOrModify(newInfo)
