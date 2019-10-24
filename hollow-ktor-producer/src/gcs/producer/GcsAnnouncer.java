@@ -57,6 +57,7 @@ public class GcsAnnouncer implements HollowProducer.Announcer {
                         .setStorageClass(StorageClass.MULTI_REGIONAL)
                         .build();
         try {
+            LOG.debug("Announcing new version {} in {}", version, blobName);
             storage.create(blobInfo, FileBasedSerializers.serializeAnnouncmentFile(version));
             return true;
         } catch (StorageException e) {
