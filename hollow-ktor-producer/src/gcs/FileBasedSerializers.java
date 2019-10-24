@@ -1,6 +1,7 @@
 package gcs;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,7 @@ public class FileBasedSerializers {
      */
     public static byte[] serializeSnapshotIndex(final List<Long> snapshots) {
         return snapshots.stream()
-                .sorted()
+                .sorted(Comparator.reverseOrder())
                 .distinct()
                 .map(Object::toString)
                 .collect(Collectors.joining("\n"))

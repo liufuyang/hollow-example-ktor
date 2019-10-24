@@ -74,6 +74,7 @@ public class GcsPublisher implements HollowProducer.Publisher {
     private void uploadBlob(final HollowProducer.Blob blob, final BlobInfo blobInfo) {
         try {
             final byte[] bytes = Files.readAllBytes(blob.getPath());
+            LOG.debug("Create gcs file {}", blobInfo.getName());
             storage.create(blobInfo, bytes);
         } catch (IOException e) {
             LOG.warn("Failed to upload file to GCS: {}", e.getMessage());

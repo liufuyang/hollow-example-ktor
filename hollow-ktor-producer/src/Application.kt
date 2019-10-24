@@ -51,6 +51,7 @@ fun Application.module(testing: Boolean = false) {
     val producer = HollowProducer
         .withPublisher(publisher)
         .withAnnouncer(announcer)
+        .withNumStatesBetweenSnapshots(50)
         .buildIncremental()
 
 //    val blobRetriever = HollowFilesystemBlobRetriever(localPublishDir.toPath())

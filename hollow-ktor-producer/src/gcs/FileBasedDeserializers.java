@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,7 +27,7 @@ public class FileBasedDeserializers {
     public static List<Long> readIndexFile(final File indexFile) {
         try (Stream<String> lines = Files.lines(Paths.get(indexFile.toURI()))) {
             return lines.map(Long::parseLong)
-                    .sorted()
+                    .sorted(Comparator.reverseOrder())
                     .distinct()
                     .collect(Collectors.toList());
         } catch (NoSuchFileException e) {
