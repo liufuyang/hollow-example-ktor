@@ -6,7 +6,6 @@ import com.netflix.hollow.api.producer.HollowProducer.Incremental;
 import gcs.GcsConstants;
 import gcs.customer.GcsBolbRetriever;
 import gcs.customer.GcsWatcher;
-import gcs.producer.Indexer;
 import io.ktor.config.ApplicationConfig;
 import io.ktor.config.ApplicationConfigValue;
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ public abstract class AbstractProducer implements Producer {
   protected HollowProducer.Builder<?> producerBuilder;
   // Using HollowProducer.Incremental as the only producer, no need to use a HollowProducer
   protected Incremental incrementalProducer;
-  protected Indexer indexer;
   protected HollowProducer.Announcer announcer;
   protected HollowProducer.Publisher publisher;
   protected GcsBolbRetriever retriever;
@@ -54,11 +52,6 @@ public abstract class AbstractProducer implements Producer {
 
   @Override
   public abstract boolean forceSnapshot();
-
-  @Override
-  public Indexer getIndexer() {
-    return indexer;
-  }
 
   @Override
   public HollowProducer.Announcer getAnnouncer() {

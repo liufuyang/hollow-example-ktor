@@ -1,41 +1,29 @@
 package gcs.repo;
 
 import com.netflix.hollow.api.producer.HollowProducer;
-import com.netflix.hollow.api.producer.enforcer.SingleProducerEnforcer;
 import gcs.customer.GcsBolbRetriever;
 import gcs.customer.GcsWatcher;
-import gcs.producer.Indexer;
 
 @SuppressWarnings("unused")
 public interface Producer {
 
-    void initAndRestore();
+  void initAndRestore();
 
-//    void pinVersion(final long version);
+  boolean forceSnapshot();
 
-//    void unpin();
+  HollowProducer.Announcer getAnnouncer();
 
-//    boolean isPinned();
+  HollowProducer.Publisher getPublisher();
 
-    boolean forceSnapshot();
+  GcsBolbRetriever getRetriever();
 
-    Indexer getIndexer();
+  GcsWatcher getWatcher();
 
-    HollowProducer.Announcer getAnnouncer();
+  void stop();
 
-    HollowProducer.Publisher getPublisher();
+  void start();
 
-    GcsBolbRetriever getRetriever();
+  boolean isRunning();
 
-    GcsWatcher getWatcher();
-
-//    SingleProducerEnforcer getEnforcer();
-
-    void stop();
-
-    void start();
-
-    boolean isRunning();
-
-    void restore();
+  void restore();
 }
