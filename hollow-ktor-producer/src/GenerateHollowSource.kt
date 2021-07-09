@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.gcs.InfoEntity
 import com.netflix.hollow.api.codegen.HollowAPIGenerator
 import com.netflix.hollow.core.write.HollowWriteStateEngine
 import com.netflix.hollow.core.write.objectmapper.HollowObjectMapper
